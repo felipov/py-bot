@@ -137,7 +137,7 @@ class RecruitmentService:
         try:
             await user.send("oier voce foi aceitor")
         except dc.Forbidden:
-            print(f"DM fechada para {user_id}")
+            print(f"DM fechada para {candidate.user_id}")
         except Exception as err:
             print(f"Erro ao enviar DM: {err}")
 
@@ -145,7 +145,7 @@ class RecruitmentService:
         embed.description = embed.description.replace("Aguardando análise...", f"Aprovado por {interaction.user.mention}")
         embed.color = dc.Color.green()
 
-        disabled_view = dc.ui.View.from_message(interaction.message)
+        disabled_view = FormButton(self)
         for item in disabled_view.children:
             item.disabled = True
 
@@ -165,8 +165,6 @@ class RecruitmentService:
         approved : bool
             True para aprovar, False para recusar.
         """
-        await interaction.response.defer()
-
         embed = interaction.message.embeds[0]
         label = f"Aprovado por {interaction.user.mention}" if approved else f"Recusado por {interaction.user.mention}!"
         embed.description = embed.description.replace("Aguardando análise...", label)
@@ -188,7 +186,7 @@ class RecruitmentService:
             except Exception as err:
                 print(f"Erro ao enviar DM: {err}")
 
-        disabled_view = dc.ui.View.from_message(interaction.message)
+        disabled_view = FormButton(self)
         for item in disabled_view.children:
             item.disabled = True
 
