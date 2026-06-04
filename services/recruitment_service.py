@@ -91,7 +91,7 @@ class RecruitmentService:
 
         message = await channel.send(embed=embed, view=FormButton(self))
 
-        self.candidates.save(message.id, name, player_id, phone, trophies, division.name)
+        self.candidates.save(str(message.id), str(interaction.user.id), name, player_id, phone, str(trophies), division.name)
 
         return SubmitResult(ok=True)
 
@@ -123,11 +123,14 @@ class RecruitmentService:
         embed.color = dc.Color.green() if approved else dc.Color.red()
 
         if approved:
-            candidates = self.candidates.pop(interaction.message.id)
-            if candidates:
-                self.members.save(*candidates)
-                user = interaction.message.mentions[0]
-                await user.send("")
+            candidate = self.candidates.pop(str(interaction.message.id))
+            if candidate:
+                user = await interaction.client.fetch_user(int(candidate.user_id))
+                try:
+                    await user.send("oier voce foi aceito")
+                    self.members.save(candidate)
+                except dc.Forbidden:
+                    print(f"DM fechada para {user_id}")
 
         disabled_view = FormButton(self)
         for item in disabled_view.children:

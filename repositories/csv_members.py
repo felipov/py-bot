@@ -14,6 +14,13 @@ class MembersRepository:
                     return True
         return False
 
-    def save(self, name: str, player_id: str, phone: str, trophies: int, division_name: str):
+    def save(self, candidate: Candidate):
+        data = [
+        candidate.name,
+        candidate.player_id,
+        candidate.phone,
+        candidate.trophies,
+        candidate.division_name
+        ]
         with open(self.path, mode="a", encoding="utf-8") as arq:
-            arq.write(",".join([name, player_id, phone, trophies, division_name]) + "\n")
+            arq.write(",".join(data) + "\n")
