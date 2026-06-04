@@ -1,4 +1,5 @@
 import discord as dc
+from models import Candidate
 
 class RecruitmentModal(dc.ui.Modal, title="Clubs Recruitment Form"):
     input_name = dc.ui.Label(
@@ -11,17 +12,17 @@ class RecruitmentModal(dc.ui.Modal, title="Clubs Recruitment Form"):
         )
     )
 
-    input_id = dc.ui.Label(
-        text="Qual é o seu ID no jogo? (ex.: 9JPJJPUUY)",
+    input_tag = dc.ui.Label(
+        text="Qual é a sua TAG no jogo? (ex.: #9JPJJPUUY)",
         component=dc.ui.TextInput(
             custom_id="id_form_modal",
-            placeholder="Digite seu ID do Brawl Stars...", 
+            placeholder="Digite sua TAG do Brawl Stars...", 
             style=dc.TextStyle.short,
             min_length=5, max_length=10
         )
     )
 
-    input_num = dc.ui.Label(
+    input_phone = dc.ui.Label(
         text="Qual é o seu número de telefone?",
         component=dc.ui.TextInput(
             custom_id="num_form_modal",
@@ -50,10 +51,13 @@ class RecruitmentModal(dc.ui.Modal, title="Clubs Recruitment Form"):
 
         result = await self.service.submit(
             interaction,
-            name = self.input_name.component.value,
-            player_id = self.input_id.component.value,
-            phone = self.input_num.component.value,
-            reason = self.input_reason.component.value
+            Candidate( 
+                user_id = interaction.user.id,
+                name = self.input_name.component.value,
+                phone = self.input_phone.component.value,
+                player_tag = self.input_tag.component.value,
+                reason = self.input_reason.component.value
+            ),
         )
         
         if not result.ok:

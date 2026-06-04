@@ -6,6 +6,6 @@ class RecruitmentPanel(dc.ui.View):
         super().__init__(timeout=None)
         self.service = service
 
-    @dc.ui.button(label="Abrir Formulário", custom_id="form_button")
+    @dc.ui.button(custom_id="form_button", label="Abrir Formulário")
     async def open_form(self, interaction: dc.Interaction, button: dc.ui.Button):
         await interaction.response.send_modal(RecruitmentModal(self.service))

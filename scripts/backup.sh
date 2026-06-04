@@ -9,10 +9,9 @@ zip -r "backups/backup_$date.zip" . \
     --exclude ".git/*" \
     --exclude "*__pycache__/*" \
     --exclude "backups/*" \
-    --exclude "scripts/*" \
     --exclude ".env" \
     --exclude ".gitignore" \
     --exclude "discloud.config" \
     --exclude "requirements.txt"
 
-echo "Backup criado: backup_$date.zip"
+echo "Created backup: backup_$date.zip"
