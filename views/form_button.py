@@ -1,15 +1,17 @@
 import discord as dc
+import models
 
 class ConfirmDivisionView(dc.ui.View):
-    def __init__(self, service, division, candidate: Candidate):
+    def __init__(self, interaction, service, division, candidate: Candidate):
         super().__init__(timeout=180)
+        self.interaction = interaction
         self.service = service
         self.division = division
         self.candidate = candidate
 
     @dc.ui.button(custom_id="btn_force_division", label="Sim, forçar entrada", emoji="😰")
     async def force_division(self, interaction: dc.Interaction, button: dc.ui.Button):
-        await self.service.force_approve(interaction, self.division, self.candidate)
+        await self.service.force_division(interaction, self.interaction, self.division, self.candidate)
 
 class FormButton(dc.ui.View):
     def __init__(self, service):
@@ -42,7 +44,7 @@ class FormButton(dc.ui.View):
     )
     async def define_division(self, interaction: dc.Interaction, select: dc.ui.Select):
         division_name = select.values[0]
-        await self.service.change_division(interaction, division_name)
+        await self.service.select_division(interaction, division_name)
     
     async def force_division(self, interaction: dc.Interaction, button: dc.ui.Button):
         await self.service.force_approve(interaction, self.division, self.candidate_id)

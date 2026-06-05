@@ -1,3 +1,5 @@
+from models import Candidate
+
 class MembersRepository:
     """
     Repositório dos membros do clube.

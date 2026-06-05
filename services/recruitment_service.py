@@ -8,6 +8,7 @@ from services.clubs_service import ClubsService, Division
 from repositories.csv_candidates import CandidatesRepository
 from repositories.csv_members import MembersRepository
 from utils.constants import FORMS_CHANNEL_ID
+from models import Candidate, Division
 
 @dataclass
 class SubmitResult:
@@ -101,14 +102,16 @@ class RecruitmentService:
         """Recusa o formulário."""
         await self._resolve(interaction, approved=False)
 
-    async def change_division(self, interaction: dc.Interaction, division_name: str):
+    async def select_division(self, interaction: dc.Interaction, division_name: str):
+        await interaction.response.defer()
+
         embed = interaction.message.embeds[0]
         candidate_id = "".join(c for c in embed.footer.text if c.isdigit())
         candidate = self.candidates.pop(candidate_id, only_get = True)
 
         division = self.clubs.division_by_name(division_name)
         if division is None:
-            await interaction.response.send_message("Divisão não encontrada.", ephemeral=True)
+            await interaction.follow.send("Divisão não encontrada.", ephemeral=True)
             return
 
         if not await self.clubs.has_vacancy(division):
@@ -117,41 +120,51 @@ class RecruitmentService:
                 description = f"Não há vagas na **{division_name} Division**. Deseja forçar a entrada?",
                 color = dc.Color.orange()
             )
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 embed = embed,
-                view = ConfirmDivisionView(self, division, candidate),
+                view = ConfirmDivisionView(interaction, self, division, candidate),
                 ephemeral = True
             )
             return
         
-        await self._approve_with_division(interaction, candidate, division)
+        if not candidate.trophies >= division.min_trophies:
+            embed = dc.Embed(
+                title = "Troféus insuficientes! 😦",
+                description = f"O jogador não tem o requisito mínimo de troféus da **{division_name} Division**. Deseja forçar a entrada?",
+                color = dc.Color.orange()
+            )
+            await interaction.followup.send(
+                embed = embed,
+                view = ConfirmDivisionView(interaction, self, division, candidate),
+                ephemeral = True
+            )
+            return
+        
+        await self._change_division(interaction, candidate, division)
 
-    async def force_approve(self, interaction: dc.Interaction, division: Division, candidate: Candidate):
-        self.candidates.pop(candidate.user_id)
-        await self._approve_with_division(interaction, candidate, division)
+    async def force_division(self, interaction: dc.Interaction, origin_interaction: dc.Interaction, division: Division, candidate: Candidate):
+        await self._change_division(origin_interaction, candidate, division)
 
-    async def _approve_with_division(self, interaction: dc.Interaction, candidate: Candidate, division: Division):
+        embed = dc.Embed(
+            title = "Feito! 🙂",
+            description = f"Divisão selecionada alterada para a **{division.name} Division** com sucesso.",
+            color = dc.Color.green()
+        )
+        await interaction.response.edit_message(embed=embed)
+
+    async def _change_division(self, interaction: dc.Interaction, candidate: Candidate, division: Division):
+        prev_division = candidate.division
         candidate.division = division
-        self.members.save(candidate)
-        user = await interaction.client.fetch_user(int(candidate.user_id))
-        try:
-            await user.send("oier voce foi aceitor")
-        except dc.Forbidden:
-            print(f"DM fechada para {candidate.user_id}")
-        except Exception as err:
-            print(f"Erro ao enviar DM: {err}")
+        self.candidates.pop(str(candidate.user_id))
+        self.candidates.save(candidate)
 
         embed = interaction.message.embeds[0]
-        embed.description = embed.description.replace("Aguardando análise...", f"Aprovado por {interaction.user.mention}")
-        embed.color = dc.Color.green()
+        embed.description = embed.description.replace(prev_division.name, division.name)
+        view = FormButton(self)
 
-        disabled_view = FormButton(self)
-        for item in disabled_view.children:
-            item.disabled = True
+        await interaction.message.edit(embed=embed, view=view)
 
-        await interaction.response.edit_message(embed=embed, view=disabled_view)
-
-    async def _resolve(self, interaction: dc.Interaction, approved: bool):
+    async def _resolve(self, interaction: dc.Interaction, approved: bool, custom_division: Division = None):
         """
         Resolve um formulário como aprovado ou recusado.
 
@@ -165,12 +178,15 @@ class RecruitmentService:
         approved : bool
             True para aprovar, False para recusar.
         """
+        await interaction.response.defer()
+
         embed = interaction.message.embeds[0]
+        user_id = "".join(c for c in embed.footer.text if c.isdigit())
+
         label = f"Aprovado por {interaction.user.mention}" if approved else f"Recusado por {interaction.user.mention}!"
         embed.description = embed.description.replace("Aguardando análise...", label)
         embed.color = dc.Color.green() if approved else dc.Color.red()
 
-        user_id = "".join(c for c in embed.footer.text if c.isdigit())
         candidate = self.candidates.pop(user_id)
 
         if candidate:
