@@ -1,13 +1,12 @@
 import discord as dc
 from dataclasses import dataclass
-from views.form_button import FormButton
-from views.form_button import ConfirmDivisionView
+from views.recruitment_buttons import FormButton, ConfirmDivisionView
 from services.form_validator import FormValidator
 from services.brawlstars import BrawlStarsService
 from services.clubs_service import ClubsService, Division
 from repositories.csv_candidates import CandidatesRepository
 from repositories.csv_members import MembersRepository
-from utils.constants import FORMS_CHANNEL_ID
+from utils import constants
 from models import Candidate, Division
 
 @dataclass
@@ -72,7 +71,7 @@ class RecruitmentService:
         if player is None:
             return SubmitResult(ok=False, error="Jogador não encontrado.")
 
-        trophies = player.get("trophies", 0)
+        trophies = player.get("trophies", -1)
         nickname = player.get("name", "Não encontrado")
         
         division = await self.clubs.get_division(trophies)
@@ -150,7 +149,7 @@ class RecruitmentService:
             description = f"Divisão selecionada alterada para a **{division.name} Division** com sucesso.",
             color = dc.Color.green()
         )
-        await interaction.response.edit_message(embed=embed)
+        await interaction.response.edit_message(embed=embed, view=None)
 
     async def _change_division(self, interaction: dc.Interaction, candidate: Candidate, division: Division):
         prev_division = candidate.division
@@ -224,7 +223,7 @@ class RecruitmentService:
         discord.Embed
             Embed formatado com os dados do candidato para envio.
         """
-        trophies_str = f"{c.trophies:,}".replace(",", ".") if c.trophies > 0 else "Não sei"
+        trophies_str = f"{c.trophies:,}".replace(",", ".") if c.trophies > 0 else "Não encontrado"
 
         embed = dc.Embed(
             title="📝 Formulário de Recrutamento", 
@@ -268,10 +267,10 @@ class RecruitmentService:
         discord.TextChannel | None
             Canal de texto ou None, se não encontrar.
         """
-        channel = interaction.client.get_channel(FORMS_CHANNEL_ID)
+        channel = interaction.client.get_channel(constants.FORMS_CHANNEL_ID)
         if channel is None:
             try:
-                channel = await interaction.client.fetch_channel(FORMS_CHANNEL_ID)
+                channel = await interaction.client.fetch_channel(constants.FORMS_CHANNEL_ID)
             except Exception as err:
                 print(f"Erro ao buscar canal de logs do formulário: {err}")
         return channel

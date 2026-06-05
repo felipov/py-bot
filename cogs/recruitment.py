@@ -1,6 +1,6 @@
 import discord as dc
 from discord.ext import commands
-from views.form_button import FormButton
+from views.recruitment_buttons import FormButton
 from views.recruitment_panel import RecruitmentPanel
 from repositories.csv_candidates import CandidatesRepository
 from repositories.csv_members import MembersRepository
@@ -24,7 +24,7 @@ class Recruitment(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(administrator=True)
-    async def setup_recruitment(self, ctx):
+    async def setup_recrutamento(self, ctx):
         embed = dc.Embed(
             title="😝 Recrutamento",
             description="etc etc etc"

@@ -1,4 +1,5 @@
 import discord as dc
+from utils import emojis
 import models
 
 class ConfirmDivisionView(dc.ui.View):
@@ -18,11 +19,11 @@ class FormButton(dc.ui.View):
         super().__init__(timeout=None)
         self.service = service
     
-    @dc.ui.button(custom_id="btn_approve_form", style=dc.ButtonStyle.green, emoji="✅")
+    @dc.ui.button(custom_id="btn_approve_form", style=dc.ButtonStyle.green, emoji=emojis.CHECK)
     async def approve(self, interaction: dc.Interaction, button: dc.ui.Button):
         await self.service.approve(interaction)
 
-    @dc.ui.button(custom_id="btn_decline_form", style=dc.ButtonStyle.red, emoji="❌")
+    @dc.ui.button(custom_id="btn_decline_form", style=dc.ButtonStyle.red, emoji=emojis.DECLINE)
     async def decline(self, interaction: dc.Interaction, button: dc.ui.Button):
         await self.service.decline(interaction)
 

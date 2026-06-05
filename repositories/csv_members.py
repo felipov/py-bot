@@ -1,4 +1,5 @@
 from models import Candidate
+import csv
 
 class MembersRepository:
     """
@@ -7,24 +8,27 @@ class MembersRepository:
     """
     def __init__(self, path: str = "database/members.csv"):
         self.path = path
+        self.headers = ["user_id", "name", "phone", "nickname", "player_tag", "trophies", "division"]
 
     def exists(self, player_tag: str = None, phone: str = None) -> bool:
         with open(self.path, mode="r", encoding="utf-8") as arq:
-            for linha in arq:
-                col = linha.strip().split(",")
-                if col[1] == player_tag or col[2] == phone:
+            rows = csv.DictReader(arq)
+            for row in rows:
+                if row["player_tag"] == player_tag:
+                    return True
+                if row["phone"] == phone:
                     return True
         return False
 
     def save(self, c: Candidate):
-        data = [
-        str(c.user_id),
-        c.name,
-        c.phone,
-        c.nickname,
-        c.player_tag,
-        str(c.trophies),
-        c.division.name
-        ]
         with open(self.path, mode="a", encoding="utf-8") as arq:
-            arq.write(",".join(data) + "\n")
+            writer = csv.DictWriter(arq, fieldnames=self.headers)
+            writer.writerow({
+                "user_id": str(c.user_id),
+                "name": c.name,
+                "phone": c.phone,
+                "nickname": c.nickname,
+                "player_tag": c.player_tag,
+                "trophies": str(c.trophies),
+                "division": c.division.name
+            })
